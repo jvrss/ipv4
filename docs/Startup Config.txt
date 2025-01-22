@@ -1,0 +1,2 @@
+Press Win + R, type shell:startup, and press Enter.
+Copy the runPublicIPNotifier.bat file to the opened folder.
