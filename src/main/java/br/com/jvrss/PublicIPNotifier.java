@@ -28,14 +28,18 @@ public class PublicIPNotifier {
 
                 JMenuItem ipv4MenuItem = new JMenuItem("Mostrar IPv4");
                 JMenuItem ipv6MenuItem = new JMenuItem("Mostrar IPv6");
+                JMenuItem mostraIpVPSMenuItem = new JMenuItem("Mostrar IP VPS");
                 JMenuItem copyIpv4MenuItem = new JMenuItem("Copiar IPv4");
                 JMenuItem copyIpv6MenuItem = new JMenuItem("Copiar IPv6");
+                JMenuItem copyIpVPSMenuItem = new JMenuItem("Copiar IP VPS");
                 JMenuItem exitMenuItem = new JMenuItem("Sair");
 
                 popupMenu.add(ipv4MenuItem);
                 popupMenu.add(ipv6MenuItem);
+                popupMenu.add(mostraIpVPSMenuItem);
                 popupMenu.add(copyIpv4MenuItem);
                 popupMenu.add(copyIpv6MenuItem);
+                popupMenu.add(copyIpVPSMenuItem);
                 popupMenu.addSeparator();
                 popupMenu.add(exitMenuItem);
 
@@ -50,6 +54,14 @@ public class PublicIPNotifier {
                     JOptionPane.showMessageDialog(null, "Seu IPv6 público é: " + ipv6);
                 });
 
+                mostraIpVPSMenuItem.addActionListener(e -> {
+                    if (args.length > 0) {
+                        JOptionPane.showMessageDialog(null, "O IP VPS fornecido é: " + args[0]);
+                        return;
+                    }
+                    JOptionPane.showMessageDialog(null, "IP VPS não fornecido como argumento.");
+                });
+
                 copyIpv4MenuItem.addActionListener(e -> {
                     String ipv4 = getIPAddress("https://api.ipify.org", false);
                     copyToClipboard(ipv4);
@@ -60,6 +72,16 @@ public class PublicIPNotifier {
                     String ipv6 = getIPAddress("https://api64.ipify.org", true);
                     copyToClipboard(ipv6);
                     JOptionPane.showMessageDialog(null, "IPv6 copiado para a área de transferência!");
+                });
+
+                copyIpVPSMenuItem.addActionListener(e -> {
+                    if (args.length > 0) {
+                        String ipVps = args[0];
+                        copyToClipboard(ipVps);
+                        JOptionPane.showMessageDialog(null, "IP VPS copiado para a área de transferência!");
+                        return;
+                    }
+                    JOptionPane.showMessageDialog(null, "IP VPS não fornecido como argumento.");
                 });
 
                 exitMenuItem.addActionListener(e -> System.exit(0));
