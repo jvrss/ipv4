@@ -1,7 +1,7 @@
-package br.com.jvrss.controller;
+package br.com.jvrss.ipv4.controller;
 
-import br.com.jvrss.model.IPModel;
-import br.com.jvrss.view.TrayView;
+import br.com.jvrss.ipv4.model.IPModel;
+import br.com.jvrss.ipv4.view.TrayView;
 
 import javax.swing.*;
 

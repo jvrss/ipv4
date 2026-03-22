@@ -1,4 +1,4 @@
-package br.com.jvrss.view;
+package br.com.jvrss.ipv4.view;
 
 import javax.swing.*;
 import java.awt.*;

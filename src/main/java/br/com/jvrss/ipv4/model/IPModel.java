@@ -1,4 +1,4 @@
-package br.com.jvrss.model;
+package br.com.jvrss.ipv4.model;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
