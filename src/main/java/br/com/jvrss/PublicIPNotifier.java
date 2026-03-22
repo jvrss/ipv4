@@ -2,6 +2,13 @@ package br.com.jvrss;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.swing.*;
 
 public class PublicIPNotifier {
@@ -26,62 +33,45 @@ public class PublicIPNotifier {
                 // Criar o menu de popup do Swing
                 JPopupMenu popupMenu = new JPopupMenu();
 
-                JMenuItem ipv4MenuItem = new JMenuItem("Mostrar IPv4");
-                JMenuItem ipv6MenuItem = new JMenuItem("Mostrar IPv6");
-                JMenuItem mostraIpVPSMenuItem = new JMenuItem("Mostrar IP VPS");
-                JMenuItem copyIpv4MenuItem = new JMenuItem("Copiar IPv4");
-                JMenuItem copyIpv6MenuItem = new JMenuItem("Copiar IPv6");
-                JMenuItem copyIpVPSMenuItem = new JMenuItem("Copiar IP VPS");
-                JMenuItem exitMenuItem = new JMenuItem("Sair");
+                JMenuItem verIpv4MenuItem        = new JMenuItem("Ver IPv4 Público");
+                JMenuItem verIpv6MenuItem        = new JMenuItem("Ver IPv6 Público");
+                JMenuItem verIpVPSMenuItem       = new JMenuItem("Ver IP VPS");
+                JMenuItem verLocalIpv4MenuItem   = new JMenuItem("Ver IP Local (IPv4)");
+                JMenuItem verLocalIpv6MenuItem   = new JMenuItem("Ver IP Local (IPv6)");
+                JMenuItem exitMenuItem           = new JMenuItem("Sair");
 
-                popupMenu.add(ipv4MenuItem);
-                popupMenu.add(ipv6MenuItem);
-                popupMenu.add(mostraIpVPSMenuItem);
-                popupMenu.add(copyIpv4MenuItem);
-                popupMenu.add(copyIpv6MenuItem);
-                popupMenu.add(copyIpVPSMenuItem);
+                popupMenu.add(verIpv4MenuItem);
+                popupMenu.add(verIpv6MenuItem);
+                popupMenu.add(verIpVPSMenuItem);
+                popupMenu.add(verLocalIpv4MenuItem);
+                popupMenu.add(verLocalIpv6MenuItem);
                 popupMenu.addSeparator();
                 popupMenu.add(exitMenuItem);
 
                 // Ações dos botões
-                ipv4MenuItem.addActionListener(e -> {
-                    String ipv4 = getIPAddress("https://api.ipify.org", false);
-                    JOptionPane.showMessageDialog(null, "Seu IPv4 público é: " + ipv4);
+                verIpv4MenuItem.addActionListener(e -> {
+                    String ip = getIPAddress("https://api.ipify.org", false);
+                    showSingleIpDialog("IPv4 Público", ip);
                 });
 
-                ipv6MenuItem.addActionListener(e -> {
-                    String ipv6 = getIPAddress("https://api64.ipify.org", true);
-                    JOptionPane.showMessageDialog(null, "Seu IPv6 público é: " + ipv6);
+                verIpv6MenuItem.addActionListener(e -> {
+                    String ip = getIPAddress("https://api64.ipify.org", true);
+                    showSingleIpDialog("IPv6 Público", ip);
                 });
 
-                mostraIpVPSMenuItem.addActionListener(e -> {
-                    if (args.length > 0) {
-                        JOptionPane.showMessageDialog(null, "O IP VPS fornecido é: " + args[0]);
-                        return;
-                    }
-                    JOptionPane.showMessageDialog(null, "IP VPS não fornecido como argumento.");
+                verIpVPSMenuItem.addActionListener(e -> {
+                    String ip = args.length > 0 ? args[0] : "IP VPS não fornecido como argumento.";
+                    showSingleIpDialog("IP VPS", ip);
                 });
 
-                copyIpv4MenuItem.addActionListener(e -> {
-                    String ipv4 = getIPAddress("https://api.ipify.org", false);
-                    copyToClipboard(ipv4);
-                    JOptionPane.showMessageDialog(null, "IPv4 copiado para a área de transferência!");
+                verLocalIpv4MenuItem.addActionListener(e -> {
+                    List<String> ips = getLocalIPAddresses(true);
+                    showLocalIpDialog("IPs Locais (IPv4)", ips);
                 });
 
-                copyIpv6MenuItem.addActionListener(e -> {
-                    String ipv6 = getIPAddress("https://api64.ipify.org", true);
-                    copyToClipboard(ipv6);
-                    JOptionPane.showMessageDialog(null, "IPv6 copiado para a área de transferência!");
-                });
-
-                copyIpVPSMenuItem.addActionListener(e -> {
-                    if (args.length > 0) {
-                        String ipVps = args[0];
-                        copyToClipboard(ipVps);
-                        JOptionPane.showMessageDialog(null, "IP VPS copiado para a área de transferência!");
-                        return;
-                    }
-                    JOptionPane.showMessageDialog(null, "IP VPS não fornecido como argumento.");
+                verLocalIpv6MenuItem.addActionListener(e -> {
+                    List<String> ips = getLocalIPAddresses(false);
+                    showLocalIpDialog("IPs Locais (IPv6)", ips);
                 });
 
                 exitMenuItem.addActionListener(e -> System.exit(0));
@@ -108,6 +98,61 @@ public class PublicIPNotifier {
         });
     }
 
+    private static void showSingleIpDialog(String title, String ip) {
+        JDialog dialog = new JDialog((Frame) null, title, true);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setSize(360, 120);
+        dialog.setLocationRelativeTo(null);
+
+        JLabel label = new JLabel(ip, SwingConstants.CENTER);
+        label.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+
+        JButton copyBtn = new JButton("Copiar");
+        copyBtn.addActionListener(e -> {
+            copyToClipboard(ip);
+            dialog.dispose();
+            JOptionPane.showMessageDialog(null, "IP copiado para a área de transferência!");
+        });
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        btnPanel.add(copyBtn);
+
+        dialog.add(label, BorderLayout.CENTER);
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private static void showLocalIpDialog(String title, List<String> ips) {
+        JDialog dialog = new JDialog((Frame) null, title, true);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setLocationRelativeTo(null);
+
+        if (ips.isEmpty()) {
+            dialog.setSize(320, 100);
+            dialog.add(new JLabel("Nenhum IP local encontrado.", SwingConstants.CENTER), BorderLayout.CENTER);
+        } else {
+            JPanel listPanel = new JPanel(new GridLayout(ips.size(), 2, 8, 6));
+            listPanel.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+
+            for (String ip : ips) {
+                JLabel ipLabel = new JLabel(ip);
+                JButton copyBtn = new JButton("Copiar");
+                copyBtn.addActionListener(e -> {
+                    copyToClipboard(ip);
+                    dialog.dispose();
+                    JOptionPane.showMessageDialog(null, ip + "\ncopiado para a área de transferência!");
+                });
+                listPanel.add(ipLabel);
+                listPanel.add(copyBtn);
+            }
+
+            dialog.add(new JScrollPane(listPanel), BorderLayout.CENTER);
+            dialog.pack();
+        }
+
+        dialog.setVisible(true);
+    }
+
     private static String getIPAddress(String apiUrl, boolean preferIPv6) {
         try {
             java.net.URL url = new java.net.URL(apiUrl);
@@ -126,7 +171,7 @@ public class PublicIPNotifier {
             if (preferIPv6 && ip.contains(":")) {
                 return ip; // IPv6 detectado
             } else if (preferIPv6) {
-                return "Erro: IPv6 não detectado. \nRetornado: " + ip;
+                return "Erro: IPv6 não detectado. Retornado: " + ip;
             }
 
             return ip; // IPv4 ou IPv6
@@ -135,6 +180,28 @@ public class PublicIPNotifier {
         }
     }
 
+    private static List<String> getLocalIPAddresses(boolean ipv4) {
+        List<String> result = new ArrayList<>();
+        try {
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) continue;
+                for (InetAddress addr : Collections.list(ni.getInetAddresses())) {
+                    if (addr.isLoopbackAddress()) continue;
+                    if (ipv4 && addr instanceof Inet4Address) {
+                        result.add(addr.getHostAddress());
+                    } else if (!ipv4 && addr instanceof Inet6Address) {
+                        String raw = addr.getHostAddress();
+                        // Remove zone ID (e.g. %eth0) for cleaner display
+                        int zoneIdx = raw.indexOf('%');
+                        result.add(zoneIdx >= 0 ? raw.substring(0, zoneIdx) : raw);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            result.add("Erro ao obter IPs locais: " + e.getMessage());
+        }
+        return result;
+    }
 
     private static void copyToClipboard(String text) {
         if (text == null || text.isEmpty()) {
